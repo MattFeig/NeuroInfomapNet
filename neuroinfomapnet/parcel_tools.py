@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import sys, os
+
 
 # Reorder parcels by group average gordon network label
 reorder_indices = [9,63,64,65,66,67,68,69,76,101,103,159,170,223,226,229,
@@ -25,7 +27,10 @@ reorder_indices = [9,63,64,65,66,67,68,69,76,101,103,159,170,223,226,229,
                 135,136,137,138,139,140,165,168,174,175,176,250,254,255,
                 257,262,263,264,266,292,297,298,306,307,308,309,310]
 
-parcel_labels = pd.read_excel('../data/parcel_information/Parcels.xlsx')
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+data_file_path = os.path.join(current_dir, 'data/gordon2016_parcels/Parcels.xlsx')
+parcel_labels = pd.read_excel(data_file_path)
 
 clist = ['red' if x == 'Default' else 'cyan' if x == 'SMhand' else 'orange' if x =='SMmouth' else 'blue' if x == 'Visual' else 'magenta'if x == 'Auditory' else 'purple' if x == "CinguloOperc" else 'yellow' if x =='FrontoParietal' else 'lime' if x == 'DorsalAttn' else 'teal' if x =='VentralAttn' else 'black' if x == 'Salience' else 'white' for x in parcel_labels['Community']]
 

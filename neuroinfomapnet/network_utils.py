@@ -1,5 +1,6 @@
 import numpy as np
-from rsfc_tools import load_nii, none_inds
+from rsfc_tools import load_nii
+from parcel_tools import none_inds
 
 def sparsity_inds_adaptive(corrmat, threshold):
     """
@@ -68,8 +69,6 @@ def sparsity_inds(corrmat,threshold):
 
     return bool_arr
 
-import numpy as np
-
 def apply_sparsity(corrmat, connectionmat):
     """
     Applies a boolean matrix to a correlation matrix, zeroing out all elements not indicated as connections.
@@ -89,7 +88,8 @@ def apply_sparsity(corrmat, connectionmat):
     
     return sub_thresholded
 
-def template_match(community_assignments, template_cortex_path = 'data/gordon2016_parcels/Parcel_Communities.ptseries.nii', delete_none_inds=True):
+
+def template_match(community_assignments, template_cortex_path, delete_none_inds = False):
     """
     Matches community assignments to a cortical template, assigning network colors based on overlap.
     Currently hardcoded for 333 gordon parcels.
@@ -101,36 +101,34 @@ def template_match(community_assignments, template_cortex_path = 'data/gordon201
     Returns:
     - out_map_colored_single (numpy.ndarray): Array of network colors for each cortical area based on the highest template overlap.
     """
-    template_cortex = load_nii(template_cortex_path)  # Load template
-    dthr = 0.1  # Threshold for determining significant overlap
+
+    template_cortex = load_nii(template_cortex_path)    # Load template
+    dthr = .1   # Threshold for determining significant overlap
     
-    # Process template based on delete_none_inds
-    if delete_none_inds:
-        template_cortex = np.delete(template_cortex, none_inds) 
-        out_map_colored_single = np.zeros(286)  
+    if delete_none_inds == True:
+        template_cortex = np.delete(template_cortex, none_inds)
+        out_map_colored_single = np.repeat(0, 286)
     else:
-        out_map_colored_single = np.zeros(333)  
+        out_map_colored_single = np.repeat(0, 333)
 
-    # Iterate through each community assignment to map to the template
-    for community_id in np.arange(-1, max(community_assignments) + 1):
-        if community_id in community_assignments:
-            community_mask = (community_assignments == community_id)
-            community_indices = np.where(community_mask)[0]
-            overlap_scores = []
+    for p in np.arange(-1,max(community_assignments)+1): # Loop through community assignments in the current threshold
+        if p in community_assignments:
+            A = (community_assignments == p)
+            Idx = np.where(community_assignments == p)[0]
+            D_list = []
 
-            for template_net_id in range(1, 18):  # Assuming 17 predefined networks in the template
-                template_net_mask = (template_cortex.astype(int) == template_net_id)
-                overlap_score = np.logical_and(community_mask, template_net_mask).sum() / np.logical_or(community_mask, template_net_mask).sum()
-                overlap_scores.append(overlap_score)
+            net_colors = range(1,18)
+            for templatenet in net_colors: # Loop through all the networks in a given template and calculate overlap
+                B = (template_cortex.astype(int) == templatenet)
+                D = np.logical_and(A,B).sum()/np.logical_or(A,B).sum()
+                D_list.append(D)
 
-            if np.max(overlap_scores) > dthr:
-                out_map_colored_single[community_indices] = template_net_id[np.argmax(overlap_scores)]
+            potential_matches = np.where(np.array(D_list)>dthr)[0]
+            if np.max(D_list) > dthr:
+                out_map_colored_single[Idx] = net_colors[np.argmax(D_list)]
 
     return out_map_colored_single
-
-
-import numpy as np
-
+    
 def consensus_networks(thresholds):
     """
     Determines the consensus network assignment for each node based on the last non-zero threshold encountered.

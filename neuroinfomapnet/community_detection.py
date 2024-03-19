@@ -3,14 +3,16 @@
 import subprocess, os
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 from network_utils import template_match
 from rsfc_tools import save_nii
-from visualization import expand_to333
 
-PARCEL_TEMPLATE_PATH = 'data/gordon2016_parcels/Gordon333_TEMPLATE.pscalar.nii'
+THIS_DIR = Path(__file__).parent
+GORDON_TEMPLATE_PATH = THIS_DIR / "data" / "gordon2016_parcels" / "Gordon333_TEMPLATE.pscalar.nii"
+GORDON_NETWORKS_PATH = THIS_DIR / "data" / "gordon2016_parcels" / "Parcel_Communities.ptseries.nii"
 
-def detect_communities_infomap(sub_thresholded, outname, outdir, perform_template_match=True):
+def detect_communities_infomap(sub_thresholded, outname, outdir):
 
     """
     Runs the Infomap community detection algorithm on a given thresholded connectivity matrix,
@@ -51,18 +53,16 @@ def detect_communities_infomap(sub_thresholded, outname, outdir, perform_templat
     # Running Infomap
     subprocess.call(f'infomap --clu -2 -s 1 -v -N 100 --out-name {outname} {infomap_input_path} {outdir}', shell=True) 
 
-    # Cleaning up the input file
-    os.remove(infomap_input_path)
-    
-    # Processing Infomap output
+def clu_to_parcel(outname, outdir):
+    # Load in community modules
     subpath = os.path.join(outdir,f'{outname}.clu')
     clu_data = pd.read_csv(subpath, skiprows=10, delimiter=' ', header=None, names=['node','module','flow'])
     clu_data = clu_data.sort_values('node')
 
-    # Save communties onto nifti. Currently hard coded for gordon parcels
-    if perform_template_match == True:
-        matched_modules = template_match(clu_data.module)
-        save_nii(expand_to333(clu_data.module), f'{outname}', outdir, wb_required_template_path=PARCEL_TEMPLATE_PATH)
-        save_nii(expand_to333(matched_modules), f'{outname}_matched', outdir, wb_required_template_path=PARCEL_TEMPLATE_PATH)
-    else:
-        save_nii(expand_to333(clu_data.module), f'{outname}', outdir, wb_required_template_path=PARCEL_TEMPLATE_PATH)
+    # Save communties onto nifti template
+    save_nii(clu_data.module, f'{outname}', outdir, wb_required_template_path=str(GORDON_TEMPLATE_PATH))
+
+    # Match communities onto a 
+    matched_modules = template_match(clu_data.module, template_cortex_path= str(GORDON_NETWORKS_PATH))
+    save_nii(matched_modules, f'{outname}_matched', outdir, wb_required_template_path=str(GORDON_TEMPLATE_PATH))
+

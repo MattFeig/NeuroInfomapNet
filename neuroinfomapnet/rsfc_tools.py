@@ -2,7 +2,7 @@ import numpy as np
 import subprocess, os
 import matplotlib.pyplot as plt
 
-path_to_wb = '/Applications/workbench/bin_macosx64/wb_command'
+path_to_wb = '/sphere/greene-lab/Shared_Tools/workbench/bin_linux64/wb_command'
 
 def load_nii(nii_path, purge=True):
     '''
