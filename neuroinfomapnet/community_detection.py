@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 
 from network_utils import template_match
-from rsfc_tools import save_nii
+from rsfc_utils import save_nii
 
 THIS_DIR = Path(__file__).parent
 GORDON_TEMPLATE_PATH = THIS_DIR / "data" / "gordon2016_parcels" / "Gordon333_TEMPLATE.pscalar.nii"
@@ -54,6 +54,11 @@ def detect_communities_infomap(sub_thresholded, outname, outdir):
     subprocess.call(f'infomap --clu -2 -s 1 -v -N 100 --out-name {outname} {infomap_input_path} {outdir}', shell=True) 
 
 def clu_to_parcel(outname, outdir):
+    
+    """
+    Saves infomap community detection CLU module files onto a nii parcellation. 
+    """
+
     # Load in community modules
     subpath = os.path.join(outdir,f'{outname}.clu')
     clu_data = pd.read_csv(subpath, skiprows=10, delimiter=' ', header=None, names=['node','module','flow'])

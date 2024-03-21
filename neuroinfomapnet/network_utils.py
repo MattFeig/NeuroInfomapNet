@@ -1,6 +1,6 @@
 import numpy as np
-from rsfc_tools import load_nii
-from parcel_tools import none_inds
+from rsfc_utils import load_nii
+from data.gordon2016_parcels.parcel_utils import none_inds
 
 def sparsity_inds_adaptive(corrmat, threshold):
     """

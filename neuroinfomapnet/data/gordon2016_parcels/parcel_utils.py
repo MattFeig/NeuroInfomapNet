@@ -2,6 +2,67 @@ import pandas as pd
 import numpy as np
 import sys, os
 
+def convert_net_number_to_color(network_list):
+    """
+    Converts a list of gordon network labels to their corresponding color strings.
+
+    Parameters:
+    - network_list (list of int): List of  network labels.
+
+    Returns:
+    - List of strings representing the color of each community.
+    """
+    color_list_parcel = np.array(['white', 'red', 'darkblue', 'yellow', 'grey', 'lime', 'grey',
+                                  'teal', 'black', 'purple', 'cyan', 'orange', 'darkviolet', 'grey',
+                                  'grey', 'blue', 'wheat'])
+    
+    # Use list comprehension for concise and efficient mapping
+    color_mapping = [color_list_parcel[int(comm)] if int(comm) != -1 else 'white' for comm in network_list]
+    
+    return color_mapping
+
+# Assumes parcels are ordered by reorder indicies
+def get_flat_inds_for_net(net, within=False):
+    range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
+        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
+    names_abbrev = ['Auditory','CingOperc','CingPar','Default','DorsalAtt','FrontoPar','None',
+        'RetroTemp','Salience','SMhand','SMmouth','VentralAtt','Visual']
+    net_ind = names_abbrev.index(net)
+    net_start, net_end= range_list[net_ind]
+
+    mask = np.ones((333,333))
+    mask[:, net_start:net_end+1] = 2
+    mask[net_start:net_end+1, :] = 2
+
+    if within == True:
+        mask = np.ones((333,333))
+        mask[net_start:net_end+1, net_start:net_end+1] = 2
+
+    flatmask = np.triu(mask,1).flatten()[np.triu(mask,1).flatten().nonzero()]
+    return np.where(flatmask == 2)[0]
+
+# Assumes parcels are ordered by reorder indicies
+def get_flat_inds_for_block(net1,net2):
+    range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
+        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
+    names_abbrev = ['Auditory','CingOperc','CingPar','Default','DorsalAtt','FrontoPar','None',
+        'RetroTemp','Salience','SMhand','SMmouth','VentralAtt','Visual']
+
+    net1_ind = names_abbrev.index(net1)
+    net2_ind = names_abbrev.index(net2)
+
+    net1_start, net1_end = range_list[net1_ind]
+    net2_start, net2_end = range_list[net2_ind]
+
+    mask = np.ones((333,333))
+    mask[net1_start:net1_end, net2_start:net2_end+1] = 2
+    mask[net2_start:net2_end, net1_start:net1_end+1] = 2
+
+    flatmask = np.triu(mask,1).flatten()[np.triu(mask,1).flatten().nonzero()]
+    return np.where(flatmask == 2)[0]
+
+
+### Random utilities. Need to refactor
 
 # Reorder parcels by group average gordon network label
 reorder_indices = [9,63,64,65,66,67,68,69,76,101,103,159,170,223,226,229,
@@ -27,11 +88,16 @@ reorder_indices = [9,63,64,65,66,67,68,69,76,101,103,159,170,223,226,229,
                 135,136,137,138,139,140,165,168,174,175,176,250,254,255,
                 257,262,263,264,266,292,297,298,306,307,308,309,310]
 
+#  new ordering
+names_abbrev = ['Auditory','CingOperc','Memory','Default','DorsalAtt','FrontoPar','None',
+        'Context','Salience','SM-Body','SM-Face','VentralAtt','Visual']
+range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
+        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-data_file_path = os.path.join(current_dir, 'data/gordon2016_parcels/Parcels.xlsx')
+data_file_path = os.path.join(current_dir, 'Parcels.xlsx')
 parcel_labels = pd.read_excel(data_file_path)
-
 clist = ['red' if x == 'Default' else 'cyan' if x == 'SMhand' else 'orange' if x =='SMmouth' else 'blue' if x == 'Visual' else 'magenta'if x == 'Auditory' else 'purple' if x == "CinguloOperc" else 'yellow' if x =='FrontoParietal' else 'lime' if x == 'DorsalAttn' else 'teal' if x =='VentralAttn' else 'black' if x == 'Salience' else 'white' for x in parcel_labels['Community']]
 
 none_inds = np.where(parcel_labels['Community'] == 'None')[0]
@@ -49,10 +115,4 @@ man_order = [2,12,11,10,17,1,9,3,8,5,7]
 sensory_inds = np.array([2,12,11,10,17])
 con_att_inds = np.array([9,3,8,5,7]) # NO DMN
 
-#  network  ordering
-names_abbrev = ['Auditory','CingOperc','Memory','Default','DorsalAtt','FrontoPar','None',
-        'Context','Salience','SM-Body','SM-Face','VentralAtt','Visual']
-
-range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
-        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
 

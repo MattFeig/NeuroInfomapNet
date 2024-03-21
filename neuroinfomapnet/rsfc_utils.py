@@ -154,9 +154,7 @@ def reconstruct_symmetric_array(flattened):
     Returns:
         list: Symmetric square array.
     """
-
     arr = np.zeros((333,333))
-
     idx = 0
     for i in range(333):
         for j in range(i + 1, 333):
@@ -166,44 +164,5 @@ def reconstruct_symmetric_array(flattened):
 
     return arr
 
-# Assumes parcels are ordered by reorder indicies
-def get_flat_inds_for_net(net, within=False):
-    range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
-        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
-    names_abbrev = ['Auditory','CingOperc','CingPar','Default','DorsalAtt','FrontoPar','None',
-        'RetroTemp','Salience','SMhand','SMmouth','VentralAtt','Visual']
-    net_ind = names_abbrev.index(net)
-    net_start, net_end= range_list[net_ind]
-
-    mask = np.ones((333,333))
-    mask[:, net_start:net_end+1] = 2
-    mask[net_start:net_end+1, :] = 2
-
-    if within == True:
-        mask = np.ones((333,333))
-        mask[net_start:net_end+1, net_start:net_end+1] = 2
-
-    flatmask = np.triu(mask,1).flatten()[np.triu(mask,1).flatten().nonzero()]
-    return np.where(flatmask == 2)[0]
-
-# Assumes parcels are ordered by reorder indicies
-def get_flat_inds_for_block(net1,net2):
-    range_list = [(0,24),(24,64), (64,69), (69,110),(110,142),(142,166),(166,213),
-        (213, 221),(221, 225),(225, 263),(263, 271),(271, 294),(294, 333)]
-    names_abbrev = ['Auditory','CingOperc','CingPar','Default','DorsalAtt','FrontoPar','None',
-        'RetroTemp','Salience','SMhand','SMmouth','VentralAtt','Visual']
-
-    net1_ind = names_abbrev.index(net1)
-    net2_ind = names_abbrev.index(net2)
-
-    net1_start, net1_end = range_list[net1_ind]
-    net2_start, net2_end = range_list[net2_ind]
-
-    mask = np.ones((333,333))
-    mask[net1_start:net1_end, net2_start:net2_end+1] = 2
-    mask[net2_start:net2_end, net1_start:net1_end+1] = 2
-
-    flatmask = np.triu(mask,1).flatten()[np.triu(mask,1).flatten().nonzero()]
-    return np.where(flatmask == 2)[0]
 
 
